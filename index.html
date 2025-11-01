@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>柔剣会計アプリ (ファイル出力なし)</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <title>柔剣会計アプリ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
 
     <style>
-        /* 既存のCSSに加えて調整 */
         body {
             margin: 0;
             font-family: 'Arial', sans-serif;
@@ -17,9 +19,10 @@
         }
 
         .app-container {
-            max-width: 100%; /* 幅を100%に拡張 */
+            max-width: 100%;
             margin: 0 auto;
-            padding-bottom: 70px; /* タスクバーのスペース */
+            padding-bottom: 70px;
+            /* タスクバーのスペース */
             background-color: white;
             min-height: 100vh;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
@@ -40,17 +43,17 @@
         .flex-container {
             display: flex;
             gap: 20px;
-            /* width: 50%; */
         }
 
-        .product-select, .cart-area {
-            flex: 1;
+        .product-select,
+        .cart-area {
             width: 50%;
         }
-        
+
         .product-select {
             border-right: 1px solid #ccc;
             padding-right: 20px;
+            width: 50%;
         }
 
         ul {
@@ -69,6 +72,7 @@
             align-items: center;
             border-radius: 4px;
         }
+
         .product-item:hover {
             background-color: #eef;
         }
@@ -80,18 +84,20 @@
             padding: 8px 0;
             border-bottom: 1px dashed #eee;
         }
+
         .cart-item button {
             margin: 0 5px;
             padding: 3px 8px;
             font-size: 0.9em;
         }
-        
+
         .total-summary {
             margin-top: 15px;
             padding: 15px;
             background-color: #e8eaf6;
             border-radius: 4px;
         }
+
         .total-summary h3 {
             color: #d32f2f;
         }
@@ -110,7 +116,7 @@
             box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
             z-index: 1000;
         }
-        
+
         .taskbar button {
             background-color: transparent;
             border: none;
@@ -122,18 +128,20 @@
             align-items: center;
             transition: color 0.2s;
         }
-        
+
         .taskbar button.active {
             color: #3f51b5;
             font-weight: bold;
         }
-        
+
         .taskbar-icon {
             font-size: 24px;
         }
-        
-        .screen { display: none; }
-        
+
+        .screen {
+            display: none;
+        }
+
         /* ログ項目のスタイル調整 */
         .log-item-header {
             display: flex;
@@ -145,10 +153,11 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="app-container">
-        <h1>柔剣会計</h1> 
+        <h1>柔剣会計</h1>
         <hr>
 
         <div id="checkout-screen" class="screen screen-content">
@@ -157,13 +166,13 @@
                 <div class="product-select">
                     <h3>商品リスト</h3>
                     <ul id="product-list" class="product-list">
-                        </ul>
+                    </ul>
                 </div>
 
                 <div class="cart-area">
                     <h3>カート内容</h3>
                     <ul id="cart-list" class="cart-list">
-                        </ul>
+                    </ul>
                     <hr>
                     <div class="total-summary">
                         <p>売れた商品の数 (合計): <strong id="total-items">0</strong> 個</p>
@@ -194,16 +203,18 @@
 
             <h3>登録済み商品一覧</h3>
             <ul id="registered-products" class="list-group">
-                </ul>
+            </ul>
         </div>
-        
         <div id="log-screen" class="screen screen-content">
-            <h2 class="mb-4">📜 会計履歴ログ</h2>
-            <div class="d-flex justify-content-end mb-3">
-                <button id="clear-logs-button" class="btn btn-danger"><i class="bi bi-trash"></i> 全て削除</button>
+            <h3 class="mb-4">📜 会計履歴ログ</h3>
+
+            <div id="log-summary" class="log-total-summary">
+                <h3><strong>総売り上げ: </strong><span id="total-log-amount">0</span>円</h3>
             </div>
+            <ul id="clear-logs-button">
+            </ul>
             <ul id="log-list" class="list-group">
-                </ul>
+            </ul>
         </div>
 
         <div class="taskbar">
@@ -221,11 +232,11 @@
             </button>
         </div>
     </div>
-    
+
     <script>
         // --- 状態管理 (Redux/React Stateの代わり) ---
         const STORAGE_KEY = 'jyuukenApp_state';
-        
+
         let state = {
             products: [],
             cart: [],
@@ -261,6 +272,10 @@
             return { totalAmount, totalItems };
         }
 
+        function totalLogAmount() {
+            return state.logs.reduce((total, log) => total + log.totalAmount, 0);
+        }
+
         // --- 画面レンダリング関数 ---
 
         /**
@@ -269,7 +284,7 @@
         function renderProductList() {
             const listEl = document.getElementById('product-list');
             listEl.innerHTML = '';
-            
+
             state.products.forEach(p => {
                 const li = document.createElement('li');
                 li.className = 'product-item';
@@ -291,9 +306,9 @@
             const totalAmountEl = document.getElementById('total-amount');
             const totalItemsEl = document.getElementById('total-items');
             const checkoutButton = document.getElementById('checkout-button');
-            
+
             cartEl.innerHTML = '';
-            
+
             if (state.cart.length === 0) {
                 cartEl.innerHTML = '<p class="text-muted">商品がありません</p>';
                 totalAmountEl.textContent = '0';
@@ -332,14 +347,19 @@
         function renderLog() {
             const logListEl = document.getElementById('log-list');
             const clearButton = document.getElementById('clear-logs-button');
+            const totalLogAmountEl = document.getElementById('total-log-amount');
             logListEl.innerHTML = '';
+
+            // 総売り上げの更新
+            const totalBenefit = totalbenefit();
+            totalLogAmountEl.textContent = totalBenefit.toLocaleString();
 
             if (state.logs.length === 0) {
                 logListEl.innerHTML = '<p class="text-muted">過去の会計履歴はありません。</p>';
                 clearButton.disabled = true;
                 return;
             }
-            
+
             clearButton.disabled = false;
 
             state.logs.forEach(log => {
@@ -372,14 +392,14 @@
                 logListEl.appendChild(li);
             });
         }
-        
+
         /**
          * 登録画面の商品リストを更新する
          */
         function renderRegisteredProducts() {
             const listEl = document.getElementById('registered-products');
             listEl.innerHTML = '';
-            
+
             state.products.forEach(p => {
                 const li = document.createElement('li');
                 li.className = 'list-group-item d-flex justify-content-between align-items-center';
@@ -422,7 +442,7 @@
             state.cart = state.cart.map(item =>
                 item.id === id ? { ...item, quantity: item.quantity + delta } : item
             ).filter(item => item.quantity > 0);
-            
+
             updateUI();
         }
 
@@ -439,12 +459,12 @@
             state.nextProductId++;
             updateUI();
         }
-        
+
         /**
          * 商品削除
          */
         function deleteProduct(id) {
-            if(confirm('本当にこの商品を削除しますか？カートに入っている場合も削除されます。')) {
+            if (confirm('本当にこの商品を削除しますか？カートに入っている場合も削除されます。')) {
                 state.products = state.products.filter(p => p.id !== id);
                 state.cart = state.cart.filter(item => item.id !== id);
                 updateUI();
@@ -465,7 +485,7 @@
             const newLog = {
                 id: state.nextLogId,
                 timestamp: new Date().toLocaleString('ja-JP'),
-                items: state.cart.map(item => ({...item})), // ディープコピー
+                items: state.cart.map(item => ({ ...item })), // ディープコピー
                 totalAmount: totalAmount,
                 totalItems: totalItems,
             };
@@ -473,31 +493,18 @@
             state.logs.unshift(newLog); // ログを先頭に追加
             state.cart = []; // カートをクリア
             state.nextLogId++;
-            
+
             alert(`合計金額 ${totalAmount.toLocaleString()}円で会計を完了し、履歴に記録しました。`);
             updateUI();
         }
-        
+
         /**
          * 個別のログを削除する
          * @param {number} id - 削除するログのID
          */
         function deleteLog(id) {
-             if (confirm(`ログ No.${id} を削除してもよろしいですか？`)) {
+            if (confirm(`ログ No.${id} を削除してもよろしいですか？`)) {
                 state.logs = state.logs.filter(log => log.id !== id);
-                updateUI();
-                renderLog();
-            }
-        }
-        
-        /**
-         * 全てのログを削除する
-         */
-        function clearAllLogs() {
-            if (state.logs.length === 0) return;
-            
-            if (confirm('全ての会計履歴を完全に削除してもよろしいですか？この操作は元に戻せません。')) {
-                state.logs = [];
                 updateUI();
                 renderLog();
             }
@@ -511,9 +518,13 @@
         function updateUI() {
             renderProductList();
             renderCart();
+            renderLog();  // ログ画面も更新して総売り上げを反映
             saveState();
         }
-
+        function totalbenefit() {
+            const total = state.logs.reduce((sum, log) => sum + log.totalAmount, 0);
+            return total;
+        }
         // 画面切り替え関数
         function showScreen(screenId, clickedButton) {
             document.querySelectorAll('.screen').forEach(screen => {
@@ -525,7 +536,7 @@
                 button.classList.remove('active');
             });
             clickedButton.classList.add('active');
-            
+
             // ログ画面に切り替わったときにログ表示を更新
             if (screenId === 'log-screen') {
                 renderLog();
@@ -535,7 +546,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadState(); // 状態をロード
             updateUI();  // 初回UIレンダリング
-            
+
             // デフォルトでレジ画面を表示
             showScreen('checkout-screen', document.getElementById('nav-checkout'));
 
@@ -544,7 +555,7 @@
                 e.preventDefault();
                 const name = document.getElementById('product-name').value;
                 const price = parseInt(document.getElementById('product-price').value);
-                
+
                 if (name && price > 0) {
                     addProduct(name, price);
                     document.getElementById('product-name').value = '';
@@ -553,15 +564,14 @@
                     alert('商品名と有効な価格を入力してください。');
                 }
             };
-            
+
             // 会計完了ボタンのイベントリスナー
             document.getElementById('checkout-button').onclick = completeSale;
-            
+
             // 全て削除ボタンのイベントリスナー
-            document.getElementById('clear-logs-button').onclick = clearAllLogs;
-            
-            // CSVボタンの削除に伴い、イベントリスナーも削除
+            // document.getElementById('clear-logs-button').onclick = clearAllLogs;
         });
     </script>
 </body>
+
 </html>
